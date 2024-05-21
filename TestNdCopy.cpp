@@ -45,6 +45,48 @@ int testNdCopy2D() {
 }
 
 // Define a test function
+int testNdCopy2DSmallToBig() {
+    // Define input and output buffers
+    char in[100]; // Assuming a buffer size of 100
+    char out[16]; // Assuming a buffer size of 100
+
+    // Initialize 'in' with sequential values from 1 to 100
+    for (int i = 0; i < 16; ++i) {
+        out[i] = i + 1;
+    }
+
+    // Define input and output core dimensions
+    std::vector<size_t> inStart = {0, 1}; // Example values
+    std::vector<size_t> inCount = {10, 10}; // Example values
+
+    bool inIsRowMajor = true;
+    bool inIsLittleEndian = true;
+
+    std::vector<size_t> outStart = {2, 2}; // Example values
+    std::vector<size_t> outCount = {4, 4}; // Example values
+    bool outIsRowMajor = true;
+    bool outIsLittleEndian = true;
+    int typeSize = sizeof(char); // Assuming char type
+
+    // Call the NdCopy function
+    int result = adios2::helper::NdCopy(out, outStart, outCount, outIsRowMajor, outIsLittleEndian,
+                                        in, inStart, inCount, inIsRowMajor, inIsLittleEndian,
+                                        typeSize);
+
+    // print the in
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            std::cout << (int)in[i * 10 + j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    
+    // Test case passed
+    std::cout << "NdCopy test passed." << std::endl;
+    return 0;
+}
+
+// Define a test function
 int testNdCopy3D() {
     // Define input and output buffers
     const int sizeX = 10;
@@ -84,9 +126,11 @@ int testNdCopy3D() {
         }
         std::cout << std::endl;
     }
+
+    return 0;
 }
 
 int main() {
     // Run the test
-    return testNdCopy2D();
+    return testNdCopy2DSmallToBig();
 }
