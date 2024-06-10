@@ -32,3 +32,27 @@ set(HIREDIS_LIBRARY ${HIREDIS}/lib/libhiredis.so)
 
 add_executable(adios_redis TestHiRedis.cpp KVCacheCommon.h KVCacheCommon.cpp)
 target_link_libraries(adios_redis ${HIREDIS_LIBRARY} adios2sys_interface)
+
+add_subdirectory(atl)
+add_subdirectory(dill)
+add_subdirectory(ffs)
+add_subdirectory(EVPath)
+
+find_package(atl REQUIRED)
+find_package(dill REQUIRED)
+find_package(ffs REQUIRED)
+find_package(EVPath REQUIRED)
+
+
+set(SW_DIR "/home/4cv/project/ADIOS2-Original/build/sw")
+set(ADIOS_DIR ${SW_DIR}/adios2)
+include_directories(${ADIOS_DIR}/include)
+# Link all required ADIOS2 libraries
+set(ADIOS2_LIBRARIES
+        ${ADIOS_DIR}/lib/libadios2_core.so
+        ${ADIOS_DIR}/lib/libadios2_c.so
+        ${ADIOS_DIR}/lib/libadios2_cxx11.so # required by #include <adios2.h> in TestRemote.cpp
+)
+
+add_executable(adios_remote TestRemote.cpp)
+target_link_libraries(adios_remote ${ADIOS2_LIBRARIES} EVPath::EVPath ffs::ffs dill::dill atl::atl)
