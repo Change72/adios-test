@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <adios2.h>
+#include <memory>
 #include "adios2/toolkit/remote/EVPathRemote.h"
 
 enum RequestTypeEnum
@@ -24,31 +25,15 @@ struct BP5ArrayRequest
 };
 std::vector<BP5ArrayRequest> PendingGetRequests;
 
-int main(int argc, char **argv) {
-    std::string bpFileName = "/home/4cv/project/ADIOS2-Original/build/tmp_file";
-
-    int i = 1;
-    while (i < argc)
-    {
-        if (std::string(argv[i]) == "-f") {
-            bpFileName = std::string(argv[i + 1]);
-            i++;
-        }
-        else if (std::string(argv[i]) == "-h" or std::string(argv[i]) == "--help") {
-            std::cout << "Usage: " << argv[0] << " [-f bpFileName]" << std::endl;
-            return 0;
-        }
-        i++;
-    }
-
+template <typename T>
+void ProcessData(const std::string &bpFileName, const std::string &varName, size_t Nx, int rank)
+{
     adios2::ADIOS adios;
     adios2::IO bpIO = adios.DeclareIO("input");
     adios2::Engine bpReader = bpIO.Open(bpFileName, adios2::Mode::Read);
 
     bpReader.BeginStep();
     const std::map<std::string, adios2::Params> variables = bpIO.AvailableVariables();
-
-    int rank = 0;
 
     for (const auto &variablePair : variables)
     {
@@ -61,17 +46,15 @@ int main(int argc, char **argv) {
     }
 
     /** Write variable for buffering */
-    adios2::Variable<int> bpInts = bpIO.InquireVariable<int>("i32");
+    adios2::Variable<T> bpVar = bpIO.InquireVariable<T>(varName);
 
-    const std::size_t Nx = 10;
-
-    if (bpInts) // means not found
+    if (bpVar) // means found
     {
-        std::vector<int> myInts;
+        std::vector<T> myInts;
         // read only the chunk corresponding to our rank
-        bpInts.SetSelection({{Nx * rank}, {Nx}});
+        bpVar.SetSelection({{Nx * rank}, {Nx}});
 
-        bpReader.Get(bpInts, myInts, adios2::Mode::Sync);
+        bpReader.Get(bpVar, myInts, adios2::Mode::Sync);
 
         std::cout << "myInts: \n";
         for (const auto number : myInts)
@@ -79,89 +62,120 @@ int main(int argc, char **argv) {
             std::cout << number << " ";
         }
         std::cout << "\n";
-    }
-    // bpReader.PerformGets();
 
-    bool RowMajorOrdering = true;
-
-
-    BP5ArrayRequest Req;
-    Req.VarName = "i32";
-    Req.RelStep = 0;
-    Req.BlockID = -1;
-    Req.Count = {Nx};
-    Req.Start = {Nx * rank};
-
-    // [verified] method 1: use new
-//    Req.Data = new int32_t [Nx];
-
-    // [verified] method 2: use std::vector
-//    std::vector<int> srcData;
-//    srcData.resize(Nx);
-//    Req.Data = srcData.data();
-
-    // [verified] method 3: use std::unique_ptr for a different pointer variable
-//    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
-
-    // [verified] method 4: use malloc
-//    Req.Data = malloc(Nx * sizeof(int32_t));
-
-    // [verified] method 5: use Req.Data and convert std::unique_ptr to void*
-//    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
-//    Req.Data = srcData.get();
-
-    // [verified] method 6: use auto and std::unique_ptr, new
-    auto srcData = std::unique_ptr<int32_t[]>(new int32_t[Nx]);
-    Req.Data = srcData.get();
-
-    // method 7: use Template T to replace int32_t
+        BP5ArrayRequest Req;
+        Req.VarName = const_cast<char*>(varName.c_str());
+        Req.RelStep = 0;
+        Req.BlockID = -1;
+        Req.Count = {Nx};
+        Req.Start = {Nx * rank};
 
 
+        // [verified] method 1: use new
+    //    Req.Data = new int32_t [Nx];
 
-    PendingGetRequests.push_back(Req);
+        // [verified] method 2: use std::vector
+    //    std::vector<int> srcData;
+    //    srcData.resize(Nx);
+    //    Req.Data = srcData.data();
+
+        // [verified] method 3: use std::unique_ptr for a different pointer variable
+    //    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
+
+        // [verified] method 4: use malloc
+    //    Req.Data = malloc(Nx * sizeof(int32_t));
+
+        // [verified] method 5: use Req.Data and convert std::unique_ptr to void*
+    //    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
+    //    Req.Data = srcData.get();
+
+        // [verified] method 6: use auto and std::unique_ptr, new
+    //    auto srcData = std::unique_ptr<int32_t[]>(new int32_t[Nx]);
+    //    Req.Data = srcData.get();
 
 
-    if (getenv("DoRemote"))
-    {
-        auto m_Remote = std::unique_ptr<adios2::EVPathRemote>(new adios2::EVPathRemote());
+        // [verified] method 7: use Template T and new -> replace method 1
+    //     Req.Data = new T[Nx];
 
-        m_Remote->Open("localhost", adios2::EVPathRemoteCommon::ServerPort, bpFileName, adios2::Mode::Read,
-                        RowMajorOrdering);
-        std::cout << "===============================================================" << std::endl;
-        std::cout << "remote open done" << std::endl;
-        for (auto &Req : PendingGetRequests)
+        // [verified] method 8: use Template T and std::vector -> replace method 2
+//        std::vector<T> srcData;
+//        srcData.resize(Nx);
+//        Req.Data = srcData.data();
+
+        // [verified] method 9: use Template T and std::unique_ptr -> replace method 3
+//        std::unique_ptr<T[]> srcData(new T[Nx]);
+//        Req.Data = srcData.get();
+
+        // [verified] method 10: use Template T and malloc -> replace method 4
+//        Req.Data = malloc(Nx * sizeof(T));
+
+        // [verified] method 11: use Template T and Req.Data and convert std::unique_ptr to void* -> replace method 5
+//        std::unique_ptr<T[]> srcData(new T[Nx]);
+//        Req.Data = srcData.get();
+
+        // [verified] method 12: use Template T and auto and std::unique_ptr, new -> replace method 6
+//        auto srcData = std::unique_ptr<T[]>(new T[Nx]);
+//        Req.Data = srcData.get();
+
+        PendingGetRequests.push_back(Req);
+
+        if (getenv("DoRemote"))
         {
-            auto handle = m_Remote->Get(Req.VarName, Req.RelStep, Req.BlockID, Req.Count, Req.Start, Req.Data);
-            std::cout << "Requested: " << Req.VarName << " " << Req.RelStep << " " << Req.BlockID << std::endl;
-            std::cout << "Requested: " << Req.Count[0] << " " << Req.Start[0] << std::endl;
-            auto result = m_Remote->WaitForGet(handle);
+            bool RowMajorOrdering = true;
+            auto m_Remote = std::unique_ptr<adios2::EVPathRemote>(new adios2::EVPathRemote());
 
-            std::cout << "Result was " << result << std::endl;
-
-            // print out the data
-            std::cout << "Data: ";
-            for (int i = 0; i < Nx; i++)
+            m_Remote->Open("localhost", adios2::EVPathRemoteCommon::ServerPort, bpFileName, adios2::Mode::Read,
+                           RowMajorOrdering);
+            std::cout << "===============================================================" << std::endl;
+            std::cout << "remote open done" << std::endl;
+            for (auto &Req : PendingGetRequests)
             {
-//                std::cout << " cc " << srcData[i] << " ";
+                auto handle = m_Remote->Get(Req.VarName, Req.RelStep, Req.BlockID, Req.Count, Req.Start, Req.Data);
+                std::cout << "Requested: " << Req.VarName << " " << Req.RelStep << " " << Req.BlockID << std::endl;
+                std::cout << "Requested: " << Req.Count[0] << " " << Req.Start[0] << std::endl;
+                auto result = m_Remote->WaitForGet(handle);
 
-                 std::cout << ((int32_t *) Req.Data)[i] << " ";
-                 std::cout << " zz ";
-//                std::cout << srcData[i] << " ";
+                std::cout << "Result was " << result << std::endl;
 
-//                std::cout << srcData[i] << " ";
-
+                // print out the data
+                std::cout << "Data: ";
+                for (int i = 0; i < Nx; i++)
+                {
+                    std::cout << ((T *)Req.Data)[i] << " cg ";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
-
         }
-
-
     }
-
 
     /** Close bp file, engine becomes unreachable after this*/
     bpReader.Close();
+}
+
+int main(int argc, char **argv)
+{
+    std::string bpFileName = "/home/4cv/project/ADIOS2-Original/build/tmp_file";
+
+    int i = 1;
+    while (i < argc)
+    {
+        if (std::string(argv[i]) == "-f")
+        {
+            bpFileName = std::string(argv[i + 1]);
+            i++;
+        }
+        else if (std::string(argv[i]) == "-h" or std::string(argv[i]) == "--help")
+        {
+            std::cout << "Usage: " << argv[0] << " [-f bpFileName]" << std::endl;
+            return 0;
+        }
+        i++;
+    }
+
+    int rank = 0;
+    const std::size_t Nx = 10;
+
+    ProcessData<int32_t>(bpFileName, "i32", Nx, rank);
 
     return 0;
-  
-};
+}
