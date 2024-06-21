@@ -92,10 +92,31 @@ int main(int argc, char **argv) {
     Req.Count = {Nx};
     Req.Start = {Nx * rank};
 
-    // std::vector<int> srcData;
-    // srcData.resize(Nx);
-    // Req.Data = srcData.data();
-    Req.Data = new int32_t [Nx];
+    // [verified] method 1: use new
+//    Req.Data = new int32_t [Nx];
+
+    // [verified] method 2: use std::vector
+//    std::vector<int> srcData;
+//    srcData.resize(Nx);
+//    Req.Data = srcData.data();
+
+    // [verified] method 3: use std::unique_ptr for a different pointer variable
+//    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
+
+    // [verified] method 4: use malloc
+//    Req.Data = malloc(Nx * sizeof(int32_t));
+
+    // [verified] method 5: use Req.Data and convert std::unique_ptr to void*
+//    std::unique_ptr<int32_t[]> srcData(new int32_t[Nx]);
+//    Req.Data = srcData.get();
+
+    // [verified] method 6: use auto and std::unique_ptr, new
+    auto srcData = std::unique_ptr<int32_t[]>(new int32_t[Nx]);
+    Req.Data = srcData.get();
+
+    // method 7: use Template T to replace int32_t
+
+
 
     PendingGetRequests.push_back(Req);
 
@@ -110,16 +131,25 @@ int main(int argc, char **argv) {
         std::cout << "remote open done" << std::endl;
         for (auto &Req : PendingGetRequests)
         {
-            m_Remote->Get(Req.VarName, Req.RelStep, Req.BlockID, Req.Count, Req.Start, Req.Data);
+            auto handle = m_Remote->Get(Req.VarName, Req.RelStep, Req.BlockID, Req.Count, Req.Start, Req.Data);
             std::cout << "Requested: " << Req.VarName << " " << Req.RelStep << " " << Req.BlockID << std::endl;
             std::cout << "Requested: " << Req.Count[0] << " " << Req.Start[0] << std::endl;
+            auto result = m_Remote->WaitForGet(handle);
+
+            std::cout << "Result was " << result << std::endl;
 
             // print out the data
             std::cout << "Data: ";
             for (int i = 0; i < Nx; i++)
             {
-                std::cout << ((int32_t *) Req.Data)[i] << " ";
-                // std::cout << srcData[i] << " ";
+//                std::cout << " cc " << srcData[i] << " ";
+
+                 std::cout << ((int32_t *) Req.Data)[i] << " ";
+                 std::cout << " zz ";
+//                std::cout << srcData[i] << " ";
+
+//                std::cout << srcData[i] << " ";
+
             }
             std::cout << std::endl;
 
