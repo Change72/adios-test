@@ -14,9 +14,6 @@ add_subdirectory(KWSys)
 add_executable(adios_ndcopy TestNdCopy.cpp)
 target_link_libraries(adios_ndcopy ${ADIOS2_LIBRARY})
 
-add_executable(adios_contained_cache TestContainedCache.cpp QueryBox.h TestInteractionCut.cpp)
-target_link_libraries(adios_contained_cache ${ADIOS2_LIBRARY})
-
 add_executable(adios_ndcut TestInteractionCut.cpp)
 target_link_libraries(adios_ndcut ${ADIOS2_LIBRARY})
 
@@ -30,8 +27,14 @@ set(HIREDIS ${SW_DIR}/hiredis)
 include_directories(${HIREDIS}/include)
 set(HIREDIS_LIBRARY ${HIREDIS}/lib/libhiredis.so)
 
+add_executable(adios_contained_cache TestContainedCache.cpp QueryBox.h KVCacheCommon.h KVCacheCommon.cpp)
+target_link_libraries(adios_contained_cache ${ADIOS2_LIBRARY} ${HIREDIS_LIBRARY})
+
 add_executable(adios_redis TestHiRedis.cpp KVCacheCommon.h KVCacheCommon.cpp)
 target_link_libraries(adios_redis ${HIREDIS_LIBRARY} adios2sys_interface)
+
+add_executable(adios_redis_list TestHiRedisList.cpp)
+target_link_libraries(adios_redis_list ${HIREDIS_LIBRARY})
 
 add_subdirectory(atl)
 add_subdirectory(dill)
@@ -56,3 +59,10 @@ set(ADIOS2_LIBRARIES
 
 add_executable(adios_remote TestRemote.cpp)
 target_link_libraries(adios_remote ${ADIOS2_LIBRARIES} EVPath::EVPath ffs::ffs dill::dill atl::atl)
+
+add_executable(adios_remote_parallel TestRemoteParallel.cpp)
+target_link_libraries(adios_remote_parallel ${ADIOS2_LIBRARIES} EVPath::EVPath ffs::ffs dill::dill atl::atl)
+
+add_executable(adios_remote_hiredis TestRemoteAndHiRedis.cpp)
+target_link_libraries(adios_remote_hiredis ${ADIOS2_LIBRARIES} ${HIREDIS_LIBRARY} EVPath::EVPath ffs::ffs dill::dill atl::atl)
+

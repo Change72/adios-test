@@ -47,7 +47,7 @@ int testNdCopy2D() {
 // Define a test function
 int testNdCopy2DSmallToBig() {
     // Define input and output buffers
-    char in[100]; // Assuming a buffer size of 100
+    char in[100] = {0}; // Assuming a buffer size of 100
     char out[16]; // Assuming a buffer size of 100
 
     // Initialize 'in' with sequential values from 1 to 100
