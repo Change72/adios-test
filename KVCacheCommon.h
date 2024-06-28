@@ -37,6 +37,11 @@ namespace adios2
 
         void get(const char *key, size_t size, void *data);
 
+        // Batch operations in pipeline, mode 0 for SET, 1 for GET
+        void AppendCommandInBatch(const char *key, size_t mode, size_t size, void *data);
+
+        void ExecuteBatch(const char *key, size_t mode, size_t size, void *data);
+
         void del(std::string key);
 
         bool exists(std::string key);

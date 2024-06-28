@@ -36,6 +36,9 @@ target_link_libraries(adios_redis ${HIREDIS_LIBRARY} adios2sys_interface)
 add_executable(adios_redis_list TestHiRedisList.cpp)
 target_link_libraries(adios_redis_list ${HIREDIS_LIBRARY})
 
+add_executable(adios_redis_pipeline TestHiRedisPipeline.cpp)
+target_link_libraries(adios_redis_pipeline ${HIREDIS_LIBRARY})
+
 add_subdirectory(atl)
 add_subdirectory(dill)
 add_subdirectory(ffs)
@@ -66,3 +69,7 @@ target_link_libraries(adios_remote_parallel ${ADIOS2_LIBRARIES} EVPath::EVPath f
 add_executable(adios_remote_hiredis TestRemoteAndHiRedis.cpp)
 target_link_libraries(adios_remote_hiredis ${ADIOS2_LIBRARIES} ${HIREDIS_LIBRARY} EVPath::EVPath ffs::ffs dill::dill atl::atl)
 
+add_executable(initialization TestInitialization.cpp)
+
+add_executable(adios_core_dim TestCoreDims.cpp)
+target_link_libraries(adios_core_dim ${ADIOS2_LIBRARIES})
