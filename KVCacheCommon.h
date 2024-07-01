@@ -6,54 +6,81 @@
 #define ADIOS2_KVCACHECOMMON_H
 #include "QueryBox.h"
 #include <cstring> // For memcpy
-#include <hiredis/hiredis.h>
 #include <string>
 #include <vector>
-#include <algorithm>
+#define ADIOS2_HAVE_KVCACHE 1
 
-// namespace adios2::KVCache
+#ifdef ADIOS2_HAVE_KVCACHE
+#include <hiredis/hiredis.h>
+#endif
 
 namespace adios2
 {
+namespace kvcache {
 
-    class KVCacheCommon
-    {
-    public:
-        std::string m_host;
-        int m_port;
-        redisContext *m_redisContext;
-        redisReply *m_redisReply;
-        std::string m_key;
-        std::string m_value;
-        std::string m_command;
+class KVCacheCommon {
+#ifdef ADIOS2_HAVE_KVCACHE
+private:
+    std::string m_host;
+    int m_port;
+    redisContext *m_redisContext;
+    redisReply *m_redisReply;
 
-        KVCacheCommon(std::string host = "localhost", int port = 6379) : m_host(host), m_port(port){};
+public:
+    KVCacheCommon(std::string host = "localhost", int port = 6379) : m_host(host), m_port(port){};
 
-        void openConnection();
+    ~KVCacheCommon() { CloseConnection(); }
 
-        void closeConnection();
+    void OpenConnection();
 
-        void set(const char *key, size_t size, void *data);
+    void CloseConnection();
 
-        void get(const char *key, size_t size, void *data);
+    void Set(const char *key, size_t size, void *data);
 
-        // Batch operations in pipeline, mode 0 for SET, 1 for GET
-        void AppendCommandInBatch(const char *key, size_t mode, size_t size, void *data);
+    void Get(const char *key, size_t size, void *data);
 
-        void ExecuteBatch(const char *key, size_t mode, size_t size, void *data);
+    // Batch operations in pipeline, mode 0 for SET, 1 for GET
+    void AppendCommandInBatch(const char *key, size_t mode, size_t size, void *data);
 
-        void del(std::string key);
+    void ExecuteBatch(const char *key, size_t mode, size_t size, void *data);
 
-        bool exists(std::string key);
+    void Del(std::string key);
 
-        std::string keyPrefix(char *VarName, size_t AbsStep, size_t BlockID);
+    bool Exists(std::string key);
 
-        std::string keyComposition(const std::string &key_prefix, Dims Start, Dims Count);
+    std::string KeyPrefix(char *VarName, size_t AbsStep, size_t BlockID);
 
-        void keyPrefixExistence(const std::string &key_prefix, std::set<std::string> &keys);
+    std::string KeyComposition(const std::string &key_prefix, Dims Start, Dims Count);
 
+    void KeyPrefixExistence(const std::string &key_prefix, std::set<std::string> &keys);
+#else
+public:
+    KVCacheCommon() = default;
+
+    ~KVCacheCommon() = default;
+
+    void OpenConnection() {};
+
+    void CloseConnection() {};
+
+    void AppendCommandInBatch(const char *key, size_t mode, size_t size, void *data) {};
+
+    void ExecuteBatch(const char *key, size_t mode, size_t size, void *data) {};
+
+    bool Exists(std::string key) { return false; };
+
+    std::string KeyPrefix(char *VarName, size_t AbsStep, size_t BlockID) { return ""; };
+
+    std::string KeyComposition(const std::string &key_prefix, Dims Start, Dims Count) {
+        return "";
     };
 
+    void KeyPrefixExistence(const std::string &key_prefix, std::set<std::string> &keys) {};
+
+#endif /* ADIOS2_HAVE_KVCACHE */
+};
+
+};
 }; // adios2
 
 #endif // ADIOS2_KVCACHECOMMON_H

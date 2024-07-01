@@ -6,121 +6,111 @@
 #include <vector>
 #include "QueryBox.h"
 
+using namespace adios2::kvcache;
+
 void test_case_1(){
     // right below
-    adios2::QueryBox originalBox({0, 0}, {10, 10});
-    adios2::QueryBox remainingBox({2, 2}, {8, 8});
-
+    QueryBox bigBox("U32184|Start_0_0|Count_10_10|");
+    QueryBox interactedBox("U32184|Start_2_2|Count_8_8|");
+    std::cout << "Big box: " << bigBox.toString() << std::endl;
+    std::cout << "Interacted box: " << interactedBox.toString() << std::endl;
     // Call the Cut function
-    std::vector<adios2::QueryBox> cutBoxes;
-    remainingBox.interactionCut(originalBox, cutBoxes);
+    std::vector<QueryBox> cutBoxes;
+    interactedBox.NdCut(bigBox, cutBoxes);
 
     // print the cut boxes
     for (size_t i = 0; i < cutBoxes.size(); ++i) {
-        std::cout << "Cut box " << i << ": start = ";
-        for (size_t j = 0; j < cutBoxes[i].start.size(); ++j) {
-            std::cout << cutBoxes[i].start[j] << " ";
-        }
-        std::cout << "count = ";
-        for (size_t j = 0; j < cutBoxes[i].count.size(); ++j) {
-            std::cout << cutBoxes[i].count[j] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "Cut box " << i << ": " << cutBoxes[i].toString() << std::endl;
     }
+
+    std::cout << "===============================================================" << std::endl;
+    std::cout << "NdCut test passed." << std::endl;
 }
 
 void test_case_2(){
     // left upper
-    adios2::QueryBox originalBox({0, 0}, {10, 10}); // Example original box (start, count)
-    adios2::QueryBox remainingBox({0, 0}, {8, 8});
-
+    QueryBox bigBox("U32184|Start_0_0|Count_10_10|");
+    QueryBox interactedBox("U32184|Start_0_0|Count_8_8|");
+    std::cout << "Big box: " << bigBox.toString() << std::endl;
+    std::cout << "Interacted box: " << interactedBox.toString() << std::endl;
     // Call the Cut function
-    std::vector<adios2::QueryBox> cutBoxes;
-    remainingBox.interactionCut(originalBox, cutBoxes);
+    std::vector<QueryBox> cutBoxes;
+    interactedBox.NdCut(bigBox, cutBoxes);
 
     // print the cut boxes
     for (size_t i = 0; i < cutBoxes.size(); ++i) {
-        std::cout << "Cut box " << i << ": start = ";
-        for (size_t j = 0; j < cutBoxes[i].start.size(); ++j) {
-            std::cout << cutBoxes[i].start[j] << " ";
-        }
-        std::cout << "count = ";
-        for (size_t j = 0; j < cutBoxes[i].count.size(); ++j) {
-            std::cout << cutBoxes[i].count[j] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "Cut box " << i << ": " << cutBoxes[i].toString() << std::endl;
     }
+
+    std::cout << "===============================================================" << std::endl;
+    std::cout << "NdCut test passed." << std::endl;
 }
 
 void test_case_3(){
     // right upper
-    adios2::QueryBox originalBox({0, 0}, {10, 10}); // Example original box (start, count)
-    adios2::QueryBox remainingBox({4, 0}, {6, 6});
-
+    // left upper
+    QueryBox bigBox("U32184|Start_0_0|Count_10_10|");
+    QueryBox interactedBox("U32184|Start_4_0|Count_6_6|");
+    std::cout << "Big box: " << bigBox.toString() << std::endl;
+    std::cout << "Interacted box: " << interactedBox.toString() << std::endl;
     // Call the Cut function
-    std::vector<adios2::QueryBox> cutBoxes;
-    remainingBox.interactionCut(originalBox, cutBoxes);
+    std::vector<QueryBox> cutBoxes;
+    interactedBox.NdCut(bigBox, cutBoxes);
 
     // print the cut boxes
     for (size_t i = 0; i < cutBoxes.size(); ++i) {
-        std::cout << "Cut box " << i << ": start = ";
-        for (size_t j = 0; j < cutBoxes[i].start.size(); ++j) {
-            std::cout << cutBoxes[i].start[j] << " ";
-        }
-        std::cout << "count = ";
-        for (size_t j = 0; j < cutBoxes[i].count.size(); ++j) {
-            std::cout << cutBoxes[i].count[j] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "Cut box " << i << ": " << cutBoxes[i].toString() << std::endl;
     }
+
+    std::cout << "===============================================================" << std::endl;
+    std::cout << "NdCut test passed." << std::endl;
 }
 
 void test_case_4(){
     // left below
-    adios2::QueryBox originalBox({0, 0}, {10, 10}); // Example original box (start, count)
-    adios2::QueryBox remainingBox({0, 4}, {6, 6});
-
+    // left upper
+    QueryBox bigBox("U32184|Start_0_0|Count_10_10|");
+    QueryBox interactedBox("U32184|Start_0_4|Count_6_6|");
+    std::cout << "Big box: " << bigBox.toString() << std::endl;
+    std::cout << "Interacted box: " << interactedBox.toString() << std::endl;
     // Call the Cut function
-    std::vector<adios2::QueryBox> cutBoxes;
-    remainingBox.interactionCut(originalBox, cutBoxes);
+    std::vector<QueryBox> cutBoxes;
+    interactedBox.NdCut(bigBox, cutBoxes);
 
     // print the cut boxes
     for (size_t i = 0; i < cutBoxes.size(); ++i) {
-        std::cout << "Cut box " << i << ": start = ";
-        for (size_t j = 0; j < cutBoxes[i].start.size(); ++j) {
-            std::cout << cutBoxes[i].start[j] << " ";
-        }
-        std::cout << "count = ";
-        for (size_t j = 0; j < cutBoxes[i].count.size(); ++j) {
-            std::cout << cutBoxes[i].count[j] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "Cut box " << i << ": " << cutBoxes[i].toString() << std::endl;
     }
+
+    std::cout << "===============================================================" << std::endl;
+    std::cout << "NdCut test passed." << std::endl;
 }
 
 void test_case_5(){
     // middle
-    adios2::QueryBox originalBox({0, 0}, {10, 10}); // Example original box (start, count)
-    adios2::QueryBox remainingBox({2, 4}, {3, 3});
-
+    // left upper
+    QueryBox bigBox("U32184|Start_0_0|Count_10_10|");
+    QueryBox interactedBox("U32184|Start_2_4|Count_3_3|");
+    std::cout << "Big box: " << bigBox.toString() << std::endl;
+    std::cout << "Interacted box: " << interactedBox.toString() << std::endl;
     // Call the Cut function
-    std::vector<adios2::QueryBox> cutBoxes;
-    remainingBox.interactionCut(originalBox, cutBoxes);
+    std::vector<QueryBox> cutBoxes;
+    interactedBox.NdCut(bigBox, cutBoxes);
 
     // print the cut boxes
     for (size_t i = 0; i < cutBoxes.size(); ++i) {
-        std::cout << "Cut box " << i << ": start = ";
-        for (size_t j = 0; j < cutBoxes[i].start.size(); ++j) {
-            std::cout << cutBoxes[i].start[j] << " ";
-        }
-        std::cout << "count = ";
-        for (size_t j = 0; j < cutBoxes[i].count.size(); ++j) {
-            std::cout << cutBoxes[i].count[j] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "Cut box " << i << ": " << cutBoxes[i].toString() << std::endl;
     }
+
+    std::cout << "===============================================================" << std::endl;
+    std::cout << "NdCut test passed." << std::endl;
+
 }
 
 int main(){
+    test_case_1();
+    test_case_2();
+    test_case_3();
+    test_case_4();
     test_case_5();
 }
