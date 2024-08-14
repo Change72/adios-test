@@ -1,12 +1,93 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <adios2/helper/adiosType.h>
-
+//#include <adios2/helper/adiosType.h>
+const size_t MAX_DIMS = 32;
 
 // Assuming CoreDims and DimsArray definitions are included here
-using namespace adios2::helper;
+//using namespace adios2::helper;
 
+class CoreDims
+{
+private:
+    const size_t DimCount;
+    size_t *const DimensSpan = NULL;
+
+public:
+    // Overloading [] operator to access elements in array style
+    const size_t &operator[](size_t index) const { return DimensSpan[index]; }
+    size_t &operator[](size_t index) { return DimensSpan[index]; }
+    CoreDims() : DimCount(0), DimensSpan(NULL) {}
+
+    // Warning!!! CoreDims is essentially a Span.  It does not own the
+    // memory that its [] operators access.  Users must ensure that
+    // memory remains valid as long as it is necessary.  If you don't
+    // know the memory will be valid the entire time, use the
+    // DimsArray class which copies the dimension data.
+    CoreDims(const std::vector<size_t> &vec) : DimCount(vec.size()), DimensSpan((size_t*)vec.data()) {}
+    CoreDims(size_t count, size_t *span_val) : DimCount(count), DimensSpan(span_val) {}
+
+    size_t size() const { return DimCount; }
+    bool empty() const { return DimCount == 0; }
+    // iterator
+    typedef const size_t *const_iterator;
+    const_iterator begin() const { return &DimensSpan[0]; }
+    const_iterator end() const { return &DimensSpan[DimCount]; }
+    typedef size_t *iterator;
+    iterator begin() { return &DimensSpan[0]; }
+    iterator end() { return &DimensSpan[DimCount]; }
+    friend std::ostream &operator<<(std::ostream &os, const CoreDims &m)
+    {
+        os << "{";
+        for (size_t i = 0; i < m.size(); i++)
+        {
+            os << m[i];
+            if (i < m.size() - 1)
+                os << ", ";
+        }
+        return os << "}";
+    }
+};
+
+class DimsArray : public CoreDims
+{
+private:
+    size_t Dimensions[MAX_DIMS];
+
+public:
+    //  constructor with no init of values
+    DimsArray(const size_t count) : CoreDims(count, &Dimensions[0]) {}
+
+    //  constructor with single init value
+    DimsArray(const size_t count, const size_t init) : CoreDims(count, &Dimensions[0])
+    {
+        for (size_t i = 0; i < count; i++)
+        {
+            Dimensions[i] = init;
+        }
+    }
+    //  constructor from vector
+    DimsArray(const std::vector<size_t> vec) : CoreDims(vec.size(), &Dimensions[0])
+    {
+        for (size_t i = 0; i < vec.size(); i++)
+        {
+            Dimensions[i] = vec[i];
+        }
+    }
+    //  constructor from address
+    DimsArray(const size_t count, const size_t *arr) : CoreDims(count, &Dimensions[0])
+    {
+        for (size_t i = 0; i < count; i++)
+        {
+            Dimensions[i] = arr[i];
+        }
+    }
+    DimsArray(const CoreDims &d1) : CoreDims(d1.size(), &Dimensions[0])
+    {
+        std::copy(d1.begin(), d1.end(), &Dimensions[0]);
+    }
+
+};
 
 int main() {
     /*
@@ -32,7 +113,7 @@ int main() {
     // Copying from CoreDims
     DimsArray dims5(coreDims);
     std::cout << "DimsArray copied from CoreDims: " << dims5 << std::endl;
-*/
+
     // Declare a pointer to DimsArray
     DimsArray* dimsPointer = nullptr;
 
@@ -61,6 +142,8 @@ int main() {
 //    DimsArray dimsPointer3(reinterpret_cast<CoreDims&>(dimsPointer2));
     DimsArray dimsPointer3(dimsPointer2);
 
+//    DimsArray dimsPointer3 = dimsPointer2;
+
     // Use the DimsArray pointer
     std::cout << "DimsArray initialized via pointer: " << *dimsPointer << std::endl;
     std::cout << "DimsArray copied from pointer: " << dimsPointer2 << std::endl;
@@ -73,6 +156,25 @@ int main() {
 
     // Clean up and deallocate memory
     delete dimsPointer;
+*/
+    DimsArray dims1(5, 42);  // Initialize with a single value
+    std::cout << "DimsArray with single value: " << dims1 << std::endl;
+
+    DimsArray dims2(dims1);
+    std::cout << "DimsArray copied from dims1: " << dims2 << std::endl;
+
+    std::cout << "-------------------" << std::endl;
+
+    dims2[1] = 100;
+    std::cout << "dims1: " << dims1 << std::endl;
+    std::cout << "dims2: " << dims2 << std::endl;
+    std::cout << "-------------------" << std::endl;
+
+    DimsArray dims3 = dims1;
+    dims3[1] = 50;
+    std::cout << "dims1: " << dims1 << std::endl;
+    std::cout << "dims2: " << dims2 << std::endl;
+    std::cout << "dims3: " << dims3 << std::endl;
 
     return 0;
 }
